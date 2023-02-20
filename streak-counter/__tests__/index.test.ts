@@ -74,5 +74,26 @@ describe("streakCounter", () => {
       // Should match the dates used to set up the tests
       expect(streak.startDate).toBe("2/19/2023");
     })
+    it("should increment the streak count", () => {
+      const date = new Date("2/20/2023")
+      const streak = streakCounter(mockLocalStorage, date)
+      console.log(streak)
+      expect(streak.currentCount).toBe(2)
+    })
+    it("should not increment the streak when login days not consecutive", () => {
+      const date = new Date("2/21/2023");
+      const streak = streakCounter(mockLocalStorage, date);
+
+      expect(streak.currentCount).toBe(1);
+    })
+    it("should save the incremented streak to localStorage", () => {
+      const key = "streak"
+      const date = new Date("2/20/2023")
+      streakCounter(mockLocalStorage, date)
+
+      const streakAsString = mockLocalStorage.getItem("streak")
+      const streak = JSON.parse(streakAsString || "")
+      expect(streak.currentCount).toBe(2)
+    })
   })
 })
