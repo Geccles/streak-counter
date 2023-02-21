@@ -12,35 +12,41 @@ function differenceInDays(dateLeft: Date, dateRight: Date): number {
     return differenceInDays
 }
 
-function incrementOrResetStreak(currentDate: Date, lastLoginDate: string): "increment" | undefined {
+function incrementOrResetStreak(currentDate: Date, lastLoginDate: string): "increment" | "none" | "reset" {
     const difference = differenceInDays(currentDate, new Date(lastLoginDate))
+    if (difference === 0) return "none"
     if (difference === 1) return "increment"
-    return undefined
+    return "reset"
 }
+
 export function streakCounter(_localStorage: Storage, date: Date): Streak {
+    const resetStreak = {
+        currentCount: 1,
+        startDate: formattedDate(date),
+        lastLoginDate: formattedDate(date)
+    }
     const streakInLocalStorage = _localStorage.getItem("streak")
     if (streakInLocalStorage) {
       try {
         const streak = JSON.parse(streakInLocalStorage || "") as Streak
-        const shouldIncrement = incrementOrResetStreak(date, streak.lastLoginDate)
-        if (shouldIncrement === "increment") {
+        const streakStatus = incrementOrResetStreak(date, streak.lastLoginDate)
+        if (streakStatus === "increment") {
             const updatedStreak: Streak = { ...streak, currentCount: streak.currentCount += 1 }
             _localStorage.setItem("streak", JSON.stringify(updatedStreak))
             return updatedStreak
         }
+        if (streakStatus === "reset") {
+            _localStorage.setItem("streak", JSON.stringify(resetStreak))
+            return resetStreak
+        }
+        if (streakStatus === "none") return streak
         return streak
       } catch (error) {
         console.error("Failed to parse streak from localStorage")
       }
     }
 
-    const streak = {
-        currentCount: 1,
-        startDate: formattedDate(date),
-        lastLoginDate: formattedDate(date)
-    }
+    _localStorage.setItem("streak", JSON.stringify(resetStreak))
 
-    _localStorage.setItem("streak", JSON.stringify(streak))
-
-    return streak
+    return resetStreak
 }
